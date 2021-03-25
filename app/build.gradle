@@ -24,6 +24,12 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        debug {
+            firebaseAppDistribution {
+                releaseNotes="Firebase 배포 테스트"
+                testers="hamster12345@gmail.com"
+            }
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
