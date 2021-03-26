@@ -61,6 +61,9 @@ dependencies {
 
     // firebase
     implementation platform('com.google.firebase:firebase-bom:26.7.0')
+
+    // Lottie Animation
+    implementation 'com.airbnb.android:lottie:3.6.1'
 }
 
 // create RELEASE_NOTE.txt file with git logs from last tag

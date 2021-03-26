@@ -1,3 +1,4 @@
 <resources>
   <string name="app_name">Firebase App Sample</string>
+    <string name="welcome_text">App is successfully launched!</string>
 </resources>
