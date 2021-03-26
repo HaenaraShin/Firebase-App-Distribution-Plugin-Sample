@@ -5,6 +5,15 @@ plugins {
     id 'com.google.firebase.appdistribution'
 }
 
+def versionProp = new Properties()
+versionProp.load(new FileInputStream("$project.rootDir/version.properties"))
+versionProp.each { prop ->
+    project.ext.set(prop.key, prop.value)
+}
+
+def verCode = Integer.valueOf("${versionProp['version_code']}")
+def verName = "${versionProp['version_name']}"
+
 android {
     compileSdkVersion 29
     buildToolsVersion "30.0.3"
@@ -13,8 +22,8 @@ android {
         applicationId "dev.haenara.sample.firebase.app"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode verCode
+        versionName verName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,7 +35,7 @@ android {
         }
         debug {
             firebaseAppDistribution {
-                releaseNotes = "Firebase 배포 테스트"
+                releaseNotesFile = "${rootDir}/RELEASE_NOTE.txt"
                 testers = "hamster12345@gmail.com"
             }
         }
@@ -71,13 +80,46 @@ def createReleaseNote() {
         // %s : git log message
         // e.g) --format=%s : feat(res): Some description
         // e.g) --format=%h %s : d23ad2f feat(res): Some description
-        commandLine('git', 'log', "${lastTag()}..HEAD", '--oneline', '--format=%s')
+        commandLine 'git', 'log', "${lastTag()}..HEAD", '--oneline', '--format=%s'
         standardOutput = stdout
     }
-    new File("${rootDir}", "RELEASE_NOTE.txt").text = stdout.toString().trim()
+    def text = stdout.toString().trim()
+    new File("${rootDir}", "RELEASE_NOTE.txt").text = text
+    return text
 }
 
-// TASK
-task _01_createChangeLog(group: '__FirebaseSample__') {
-    createReleaseNote()
+def gitTagVersion(verName) {
+    try {
+        exec {
+            commandLine 'git', 'tag', "v${verName}"
+        }
+    } catch (Exception e) {
+        e.printStackTrace()
+    }
 }
+
+def updateVersionProperties(name, code) {
+    def versionProp = new File("${rootDir}", 'version.properties')
+    def newVersion = name.substring(0, name.lastIndexOf('.')) +
+            ".${Integer.valueOf(name.split('\\.').last()) + 1}"
+    println(newVersion)
+    versionProp.text = "version_name=${newVersion}\n" +
+            "version_code=${code + 1}"
+}
+
+
+// TASK
+task distributeApp(dependsOn: 'appDistributionUploadDebug', group: '_sample_') {
+    doFirst {
+        // check if anything has changed
+        if (createReleaseNote().isBlank())
+            throw new GradleException('Nothing has changed from last tag.')
+    }
+
+    doLast {
+        gitTagVersion(verName)
+        updateVersionProperties(verName, verCode)
+    }
+}
+
+distributeApp.dependsOn('assemble')
