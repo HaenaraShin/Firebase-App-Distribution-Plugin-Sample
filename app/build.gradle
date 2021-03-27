@@ -5,14 +5,24 @@ plugins {
     id 'com.google.firebase.appdistribution'
 }
 
-def versionProp = new Properties()
-versionProp.load(new FileInputStream("$project.rootDir/version.properties"))
-versionProp.each { prop ->
-    project.ext.set(prop.key, prop.value)
+def versionProp = {
+    def versionProp = new Properties()
+    versionProp.load(new FileInputStream("$project.rootDir/version.properties"))
+    versionProp.each { prop ->
+        project.ext.set(prop.key, prop.value)
+    }
+    return versionProp
 }
 
-def verCode = Integer.valueOf("${versionProp['version_code']}")
-def verName = "${versionProp['version_name']}"
+def verCode = {
+    def prop = versionProp()
+    return Integer.valueOf("${prop['version_code']}")
+}
+
+def verName = {
+    def prop = versionProp()
+    return "${prop['version_name']}"
+}
 
 android {
     compileSdkVersion 29
@@ -22,8 +32,8 @@ android {
         applicationId "dev.haenara.sample.firebase.app"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode verCode
-        versionName verName
+        versionCode verCode()
+        versionName verName()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -91,9 +101,13 @@ def createReleaseNote() {
     return text
 }
 
-def gitTagVersion(verName) {
+def gitCommitAndTagVersion(releaseNote, verName) {
+    try { exec { commandLine 'git', 'reset', 'HEAD' } } catch(Exception e) { }
+    try { exec { commandLine 'git', 'add', "${rootDir}/version.properties" } } catch(Exception e) { }
+    try { exec { commandLine 'git', 'commit', '-m', "v${verName} is released\n\n${releaseNote}" } } catch(Exception e) { }
     try {
         exec {
+            commandLine 'git', 'tag', "v${verName}"
             commandLine 'git', 'tag', "v${verName}"
         }
     } catch (Exception e) {
@@ -105,24 +119,26 @@ def updateVersionProperties(name, code) {
     def versionProp = new File("${rootDir}", 'version.properties')
     def newVersion = name.substring(0, name.lastIndexOf('.')) +
             ".${Integer.valueOf(name.split('\\.').last()) + 1}"
-    println(newVersion)
     versionProp.text = "version_name=${newVersion}\n" +
             "version_code=${code + 1}"
 }
 
-
 // TASK
-task distributeApp(dependsOn: 'appDistributionUploadDebug', group: '_sample_') {
-    doFirst {
-        // check if anything has changed
-        if (createReleaseNote().isBlank())
-            throw new GradleException('Nothing has changed from last tag.')
-    }
-
+task updateVersion(group: '_sample_') {
     doLast {
-        gitTagVersion(verName)
-        updateVersionProperties(verName, verCode)
+        // check if anything has changed
+        def releaseNote = createReleaseNote()
+        if (releaseNote.isBlank())
+            throw new GradleException('Nothing has changed from last tag.')
+
+        updateVersionProperties(verName(), verCode())
+        gitCommitAndTagVersion(releaseNote, verName())
     }
 }
 
-distributeApp.dependsOn('assemble')
+task buildAndDistribute(dependsOn: 'updateVersion', group: '_sample_') {
+}
+buildAndDistribute.dependsOn('tasks')
+buildAndDistribute.dependsOn('assemble')
+buildAndDistribute.dependsOn('appDistributionUploadDebug')
+
