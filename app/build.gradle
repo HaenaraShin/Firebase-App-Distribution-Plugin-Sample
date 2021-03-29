@@ -101,6 +101,14 @@ def createReleaseNote() {
     return text
 }
 
+def updateVersionProperties(name, code) {
+    def versionProp = new File("${rootDir}", 'version.properties')
+    def newVersion = name.substring(0, name.lastIndexOf('.')) +
+            ".${Integer.valueOf(name.split('\\.').last()) + 1}"
+    versionProp.text = "version_name=${newVersion}\n" +
+            "version_code=${code + 1}"
+}
+
 def gitCommitAndTagVersion(releaseNote, verName) {
     try { exec { commandLine 'git', 'reset', 'HEAD' } } catch(Exception e) { }
     try { exec { commandLine 'git', 'add', "${rootDir}/version.properties" } } catch(Exception e) { }
@@ -113,14 +121,6 @@ def gitCommitAndTagVersion(releaseNote, verName) {
     } catch (Exception e) {
         e.printStackTrace()
     }
-}
-
-def updateVersionProperties(name, code) {
-    def versionProp = new File("${rootDir}", 'version.properties')
-    def newVersion = name.substring(0, name.lastIndexOf('.')) +
-            ".${Integer.valueOf(name.split('\\.').last()) + 1}"
-    versionProp.text = "version_name=${newVersion}\n" +
-            "version_code=${code + 1}"
 }
 
 // TASK
