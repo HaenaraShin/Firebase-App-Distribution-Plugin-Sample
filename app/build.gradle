@@ -124,7 +124,7 @@ def updateVersionProperties(name, code) {
 }
 
 // TASK
-task updateVersion(group: '_sample_') {
+task _1_updateVersion(group: '_sample_') {
     doLast {
         // check if anything has changed
         def releaseNote = createReleaseNote()
@@ -136,9 +136,6 @@ task updateVersion(group: '_sample_') {
     }
 }
 
-task buildAndDistribute(dependsOn: 'updateVersion', group: '_sample_') {
-}
-buildAndDistribute.dependsOn('tasks')
-buildAndDistribute.dependsOn('assemble')
-buildAndDistribute.dependsOn('appDistributionUploadDebug')
-
+task _2_buildAndDistribute(dependsOn: 'clean', group: '_sample_') {}
+_2_buildAndDistribute.dependsOn('assemble')
+_2_buildAndDistribute.dependsOn('appDistributionUploadDebug')
