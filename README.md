@@ -93,15 +93,13 @@ def updateVersionProperties(name, code) {
 
 ```groovy
 def gitCommitAndTagVersion(releaseNote, verName) {
-    try { exec { commandLine 'git', 'reset', 'HEAD' } } catch(Exception e) { }
-    try { exec { commandLine 'git', 'add', "${rootDir}/version.properties" } } catch(Exception e) { }
-    try { exec { commandLine 'git', 'commit', '-m', "v${verName} is released\n\n${releaseNote}" } } catch(Exception e) { }
     try {
-        exec {
-            commandLine 'git', 'tag', "v${verName}"
-            commandLine 'git', 'tag', "v${verName}"
-        }
-    } catch (Exception e) {
+        exec { commandLine 'git', 'reset', 'HEAD' }
+        exec { commandLine 'git', 'add', "${rootDir}/version.properties" }
+        exec { commandLine 'git', 'commit', '-m', "v${verName} is released\n\n${releaseNote}" }
+        exec { commandLine 'git', 'tag', "v${verName}" }
+    }
+    catch (Exception e) {
         e.printStackTrace()
     }
 }
