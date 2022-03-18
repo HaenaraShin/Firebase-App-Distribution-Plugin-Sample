@@ -4,6 +4,8 @@
 ![LAUNCHED!](icon.png)
 > Launch your app quickly and simply.
  
+📌 자세한 설명은 [블로그](https://haenarashin.github.io/android,firebase/2021/03/27/Firebase_App_Distribution_on_AndroidStudio.html)에서 확인하실 수 있습니다. 
+ 
 ## How it works
 
 1. Collect change logs from git and convert into a release notes.
